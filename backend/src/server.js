@@ -15,13 +15,19 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
 }));
 app.use(express.json({ limit: '10mb' }));
+
+// Handle OPTIONS preflight for all routes
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -244,6 +250,12 @@ class MLService {
 
 
 // ============ ROUTES ============
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'YouTube Analytics API is running' });
+});
+
 // Analyze Channel Endpoint (supports handle, channel ID, or link)
 app.post('/api/analyze-channel', async (req, res) => {
   try {
